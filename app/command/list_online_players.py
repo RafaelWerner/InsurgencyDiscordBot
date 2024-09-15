@@ -1,5 +1,5 @@
 from app.core.manager import Manager
-from app.service.server.listplayers import ListPlayers
+from app.service.listplayers import ListPlayers
 
 class ListOnlinePlayers:
     def __init__(self):
@@ -16,5 +16,9 @@ class ListOnlinePlayers:
 
     def run(self):
         online_players = ListPlayers().run()
+        print("Online players: ", online_players)
 
-        return f"Agora temos [ {len(online_players)} ] jogadores online\n\n{self.__format_players(online_players)}"
+        bot_count = online_players["bots"]
+        sorted_humans = sorted(online_players["humans"], key=lambda player: player.score, reverse=True)
+
+        return f"Agora temos [ {len(sorted_humans)} ] jogadores online, jogando contra [ {bot_count} ] bots.\n\n{self.__format_players(sorted_humans)}"

@@ -1,0 +1,21 @@
+[
+    {
+        "kind": "say",
+        "interval": 300000,
+        "method": "random",
+        "last_execution": 0,
+        "last_message": "",
+        "messages": [
+            "Bem-vindo ao servidor KPX!\nLembre-se de seguir as regras.\nRespeite todos os jogadores.",
+            "Atenção: Não capture ou destrua\no objetivo sozinho. Espere pelo time.\nSujeito a kick/ban.",
+            "Atenção: Espere pelo consentimento\ndo seu time antes de capturar ou\ndestruir um objetivo.\nSujeito a kick/ban.",
+            "Cyber Optrix é o tigrão!",
+            "Me processa piranha.",
+            "Nada melhor que tomar\num vinho suave no canudinho.",
+            "Concurso de melhor gemido de morte,\ntoda quinta-feira às 20h.",
+            "Aqui é o lugar onde você pode ser\nvocê mesmo. A não ser que você\nseja um babaca.",
+            "Quem que esta em primeiro?",
+            "Torne-se VIP e garanta sua vaga.\nEntre em nosso discord:\nhttps://bit.ly/GACKPX"
+        ]
+    }
+]

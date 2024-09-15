@@ -42,7 +42,7 @@
         "role": "vip"
     },
     {
-        "discord_id": 0,
+        "discord_id": 424262828057427981,
         "steam_id": "76561198878308868",
         "name": "SYNYSTER",
         "role": "vip"
@@ -51,6 +51,18 @@
         "discord_id": 0,
         "steam_id": "76561197982527151",
         "name": "[.:VT.NC:.] DÓRIA",
+        "role": "vip"
+    },
+    {
+        "discord_id": 640322720021741636,
+        "steam_id": "76561198272396684",
+        "name": "Biuzera",
+        "role": "vip"
+    },
+    {
+        "discord_id": 304815079738703872,
+        "steam_id": "76561198307605132",
+        "name": "peneluca",
         "role": "vip"
     }
 ]

@@ -1,11 +1,16 @@
 # Description: Main file of the bot, where the discord client is created and the commands are defined.
 import requests
+import json
+import random
 
-from discord import app_commands
 import discord
+from discord.ext import tasks
+from discord import app_commands
+from datetime import datetime
 
 from app.core.manager import Manager
-from app.model.vip import VIP
+from app.model.task import Task
+from app.service.say import Say
 
 from app.command.list_online_players import ListOnlinePlayers
 from app.command.want_play import WantPlay
@@ -21,18 +26,53 @@ LOGS_CHANNEL = 1277640729463619686
 VIP_ROLE = 1270096989216051305
 
 class MyClient(discord.Client):
+    __tasks = []
+
     def __init__(self):
         super().__init__(intents=discord.Intents.default())
         self.tree = discord.app_commands.CommandTree(self)
 
     async def setup_hook(self):
         self.tree.copy_global_to(guild=MY_GUILD)
+        self.background_tasks.start()
         await self.tree.sync(guild=MY_GUILD)
 
+    @tasks.loop(seconds=240)
+    async def background_tasks(self):
+        for task in self.__tasks:
+            try:
+                current_time = int(datetime.now().timestamp())
 
-Manager(config_file="config.ini", tasks_file="tasks.json", vips_file="vips.json")
+                if (task['last_execution'] == 0) or (task['last_execution'] + task['interval'] > current_time):
+                    if task['kind'] == 'say':
+                        messages = task['messages']
+
+                        while random_message := random.choice(messages):
+                            if random_message != task['last_message']:
+                                task['last_message'] = random_message
+                                Say(random_message).run()
+                                break
+                    else:
+                        raise ValueError(f"Task type not supported: {task['kind']}")
+
+                    task['last_execution'] = current_time
+            except Exception as e:
+                print(f"Error executing task: {e} for task: {task}")
+
+    async def load_tasks(self):
+        Manager(config_file="config.ini", tasks_file="tasks.json", vips_file="vips.json")
+
+        with open("tasks.json", encoding='utf8') as f:
+            self.__tasks = json.load(f)
+
+    @background_tasks.before_loop
+    async def before_my_task(self):
+        await self.load_tasks()
+        await self.wait_until_ready()
+
+
+
 client = MyClient()
-
 
 @client.event
 async def on_ready():

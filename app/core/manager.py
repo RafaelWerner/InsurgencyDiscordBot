@@ -1,11 +1,9 @@
-
-import json
 import os
 from configparser import ConfigParser
 
 from app.core.singleton import Singleton
 from app.core.rcon import RCON
-from app.model.vip import VIP, VIPs
+from app.model.vip import VIPs
 
 class Manager(Singleton):
     __rcon = None
@@ -15,14 +13,11 @@ class Manager(Singleton):
             Manager instance:
             - Config:
                 {self.config}
-            - Tasks:
-                {self.tasks}
             - Vips:
                 {self.vips.all()}
         """
     def setup(self, config_file='config.ini', tasks_file='tasks.json', vips_file='vips.json'):
         self.__load_config(config_file)
-        self.__load_tasks(tasks_file)
         self.__load_vips(vips_file)
 
     def __file_exists(self, file):
@@ -33,12 +28,6 @@ class Manager(Singleton):
         self.__file_exists(config_file)
         self.config = ConfigParser()
         self.config.read(config_file)
-
-    def __load_tasks(self, tasks_file):
-        self.__file_exists(tasks_file)
-
-        with open(tasks_file) as f:
-            self.tasks = json.load(f)
 
     def __load_vips(self, vips_file):
         self.__file_exists(vips_file)

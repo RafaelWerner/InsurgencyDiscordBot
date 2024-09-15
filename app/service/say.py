@@ -1,11 +1,10 @@
+from app.core.manager import Manager
 
-from app.service.server.base import BaseServer
-
-class Say(BaseServer):
-    MAX_LINE_LENGTH = 60
+class Say:
+    MAX_LINE_LENGTH = 45
 
     def __init__(self, message):
-        super().__init__()
+        self.rcon = Manager().rcon()
         self.message = self.__parse_message(message.strip())
 
     def __parse_message(self, message):
@@ -19,7 +18,7 @@ class Say(BaseServer):
 
         for line in parsed_message:
             if len(line) > self.MAX_LINE_LENGTH:
-                raise ValueError("Message is too long")
+                raise ValueError(f"Message is too long: [{line}]")
 
         return parsed_message
 

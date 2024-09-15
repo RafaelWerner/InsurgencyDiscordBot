@@ -1,8 +1,8 @@
 import asyncio
 
-from app.service.server.listplayers import ListPlayers
-from app.service.server.kick import Kick
-from app.service.server.say import Say
+from app.service.listplayers import ListPlayers
+from app.service.kick import Kick
+from app.service.say import Say
 
 class KickPlayerByName:
 
@@ -22,7 +22,7 @@ class KickPlayerByName:
 
 
     def _get_player(self):
-        players = ListPlayers().run()
+        players = ListPlayers().run()["humans"]
 
         for player in players:
             if player.name == self.player_name:

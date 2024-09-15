@@ -1,9 +1,8 @@
-from app.service.server.base import BaseServer
+from app.core.manager import Manager
 
-class Kick(BaseServer):
-
+class Kick:
     def __init__(self, identifier, reason=None):
-        super().__init__()
+        self.rcon = Manager().rcon()
         self.identifier = identifier
         self.reason = self.__formated_reason(reason)
 

@@ -2,9 +2,9 @@ import random
 import asyncio
 
 from app.core.manager import Manager
-from app.service.server.listplayers import ListPlayers
-from app.service.server.say import Say
-from app.service.server.kick import Kick
+from app.service.listplayers import ListPlayers
+from app.service.say import Say
+from app.service.kick import Kick
 
 class WantPlay:
     SLOTS_AMOUNT = 12
@@ -43,7 +43,7 @@ class WantPlay:
             return str(err)
 
     async def process(self):
-        online_players = ListPlayers().run()
+        online_players = ListPlayers().run()["humans"]
 
         if len(online_players) < self.SLOTS_AMOUNT:
            return f"Temos {self.SLOTS_AMOUNT - len(online_players)} vagas disponíveis, pode entrar!"
