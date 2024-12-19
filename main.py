@@ -1,161 +1,219 @@
-# Description: Main file of the bot, where the discord client is created and the commands are defined.
-import requests
-import json
-import random
 
 import discord
-from discord.ext import tasks
 from discord import app_commands
-from datetime import datetime
 
-from app.core.manager import Manager
-from app.model.task import Task
-from app.service.say import Say
+from app.singleton.config import SingletonConfig
+from app.core.client import CustomClient
 
 from app.command.list_online_players import ListOnlinePlayers
 from app.command.want_play import WantPlay
-from app.command.kick_player_by_name import KickPlayerByName
+from app.command.list_admins import ListAdmins
+from app.command.kick_player_by_net_id_or_name import KickPlayerByNetIdOrName
+from app.command.ban_player_by_net_id_or_name import BanPlayerByNetIdOrName
+from app.command.change_map import ChangeMap
+from app.command.update_config import UpdateConfig
+from app.command.send_message import SendMessage
 
-MY_GUILD = discord.Object(id=1269368944355971133)
+from app.resources.resources import *
+from app.resources.locales import *
 
-#channels
-VIPS_CHANNEL = 1277410614083584073
-LOGS_CHANNEL = 1277640729463619686
+# Singleton instance
+config = SingletonConfig().get()
 
-#roles
-VIP_ROLE = 1270096989216051305
+# Channels
+ADMINS_CHANNEL_ID = int(config['discord']['admins_channel_id'])
+BOT_COMMAND_CHANNEL_NAME = config['discord']['bot_commands_channel_name']
+BOT_COMMAND_CHANNEL_ID = int(config['discord']['bot_commands_channel_id'])
 
-class MyClient(discord.Client):
-    __tasks = []
+# Custom client
+client = CustomClient(discord.Object(id = config['discord']['guild_id']))
 
-    def __init__(self):
-        super().__init__(intents=discord.Intents.default())
-        self.tree = discord.app_commands.CommandTree(self)
+async def log_action(interaction, message):
+    try:
+        logs_channel = interaction.guild.get_channel(int(config['discord']['logs_channel_id']))
 
-    async def setup_hook(self):
-        self.tree.copy_global_to(guild=MY_GUILD)
-        self.background_tasks.start()
-        await self.tree.sync(guild=MY_GUILD)
-
-    @tasks.loop(seconds=240)
-    async def background_tasks(self):
-        for task in self.__tasks:
-            try:
-                current_time = int(datetime.now().timestamp())
-
-                if (task['last_execution'] == 0) or (task['last_execution'] + task['interval'] > current_time):
-                    if task['kind'] == 'say':
-                        messages = task['messages']
-
-                        while random_message := random.choice(messages):
-                            if random_message != task['last_message']:
-                                task['last_message'] = random_message
-                                Say(random_message).run()
-                                break
-                    else:
-                        raise ValueError(f"Task type not supported: {task['kind']}")
-
-                    task['last_execution'] = current_time
-            except Exception as e:
-                print(f"Error executing task: {e} for task: {task}")
-
-    async def load_tasks(self):
-        Manager(config_file="config.ini", tasks_file="tasks.json", vips_file="vips.json")
-
-        with open("tasks.json", encoding='utf8') as f:
-            self.__tasks = json.load(f)
-
-    @background_tasks.before_loop
-    async def before_my_task(self):
-        await self.load_tasks()
-        await self.wait_until_ready()
-
-
-
-client = MyClient()
-
+        if logs_channel:
+            log_content = f"**Usuário:** {interaction.user.name}\n> {message}"
+            await logs_channel.send(log_content)
+        else:
+            print(f"Canal de logs não encontrado")
+    except Exception as e:
+        raise Exception(f"Erro ao logar ação: {e}")
 @client.event
 async def on_ready():
-    print(f'Logged in as {client.user} (ID: {client.user.id})')
+    print(f'Entrou como {client.user} (ID: {client.user.id})')
     print('------')
 
 @client.tree.command(name='listar-jogadores')
-async def listplayers(interaction: discord.Interaction):
-    playerslist = ListOnlinePlayers().run()
+async def listar_jogadores(interaction: discord.Interaction):
+    command_name = "listar-jogadores"
+
+    if interaction.channel_id != BOT_COMMAND_CHANNEL_ID:
+        await log_action(interaction, StrFmtComandoExecutadoEmCanalIncorreto.format(command_name))
+        return await interaction.response.send_message(StrComandoDeveSerExecutadoNoCanal.format(BOT_COMMAND_CHANNEL_NAME))
+
+    await log_action(interaction, StrFmtComandoExecutado.format(command_name))
+    playerslist = await ListOnlinePlayers().run()
     await interaction.response.send_message(playerslist)
 
+@client.tree.command(name='enviar-mensagem')
+@app_commands.describe(mensagem='Mensagem a ser enviada')
+async def enviar_mensagem(interaction: discord.Interaction, mensagem: str):
+    command_name = "enviar-mensagem"
+
+    if interaction.channel_id != ADMINS_CHANNEL_ID:
+        await log_action(interaction, StrFmtComandoExecutadoEmCanalIncorreto.format(command_name))
+        return await interaction.response.send_message(StrComandoDisponivelSomenteParaAdmins)
+
+    try:
+        await log_action(interaction, f"Comando {command_name} executado com mensagem: {mensagem}")
+        await SendMessage().run(mensagem)
+    except Exception as e:
+        await log_action(interaction, f"Erro ao enviar mensagem. {e}")
+        return await interaction.response.send_message(f"Erro ao enviar mensagem. {e}")
+
+    response_message = f"Mensagem enviada com sucesso: {mensagem}"
+    await interaction.response.send_message(response_message)
+
 @client.tree.command(name='quero-jogar')
-async def want_play(interaction: discord.Interaction):
-    if (interaction.channel_id != VIPS_CHANNEL):
-        return await interaction.response.send_message("Comando disponível apenas para VIPS no canal **vips**.")
+async def quero_jogar(interaction: discord.Interaction):
+    command_name = "quero-jogar"
 
-    sender_id = interaction.user.id
+    if interaction.channel_id != ADMINS_CHANNEL_ID:
+        await log_action(interaction, StrFmtComandoExecutadoEmCanalIncorreto.format(command_name))
+        return await interaction.response.send_message(StrComandoDisponivelSomenteParaAdmins)
 
-    if not Manager().vips.is_vip(sender_id):
-        return "Você não tem permissão para executar este comando.\nTorne-se VIP para garantir sua vaga."
-
-    response = await WantPlay().run(sender_id)
-
-    await interaction.response.send_message(response)
-
-@client.tree.command(name='listar-vips')
-async def list_vips(interaction: discord.Interaction):
-    vips = Manager().vips.all()
-    vips_list = f"Estamos com {len(vips)} VIPs:\n"
-
-    for vip in vips:
-        vips_list += f"- **{vip.name}**\n"
-
-    await interaction.response.send_message(vips_list)
-
-async def catch_steam_info(steam_id):
-    response = requests.get(f"https://playerdb.co/api/player/steam/{steam_id}")
-
-    if response.status_code == 200:
-        return response.json()
-
-    return None
-
-@client.tree.command(name='kickar-jogador-por-nome')
-@app_commands.describe(player_name='Nome do jogador a ser kickado')
-async def kick_player_by_name(interaction: discord.Interaction, player_name: str):
-    sender_id = interaction.user.id
-
-    if not Manager().vips.is_admin(sender_id):
-        return await interaction.response.send_message("Você não tem permissão para kickar jogadores.")
-
-    response = await KickPlayerByName(player_name).run()
+    await log_action(interaction, "Comando quero-jogar executado.")
+    response = await WantPlay().run()
 
     await interaction.response.send_message(response)
 
-@client.tree.command(name='adicionar-vip')
-@app_commands.describe(user='Usuário a ser adicionado como VIP', steam_id='ID da conta Steam do usuário, pegar no perfil do usuário na Steam')
-async def add_new_vip(interaction: discord.Interaction, user: discord.Member, steam_id: str):
-    sender_id = interaction.user.id
+@client.tree.command(name='listar-admins')
+async def listar_admins(interaction: discord.Interaction):
+    command_name = "listar-admins"
 
-    if not Manager().vips.is_admin(sender_id):
-        return await interaction.response.send_message("Você não tem permissão para adicionar VIPs.")
+    if interaction.channel_id != ADMINS_CHANNEL_ID:
+        await log_action(interaction, StrFmtComandoExecutadoEmCanalIncorreto.format(command_name))
+        return await interaction.response.send_message(StrComandoDisponivelSomenteParaAdmins)
 
-    if Manager().vips.find(user.id):
-        return await interaction.response.send_message("O {user.name} já é um VIP.")
+    await log_action(interaction, "Comando listar-admins executado.")
+    message = ListAdmins().run()
 
-    if (steam_id.strip() == ""):
-        return await interaction.response.send_message("É necessário informar o ID da conta Steam do usuário.")
+    await interaction.response.send_message(message)
 
-    steam_info = await catch_steam_info(steam_id)
+@client.tree.command(name='banir-jogador')
+@app_commands.describe(localizador='Nome ou Id da plataforma do jogador a ser banido',
+                       duracao='Duração do ban em minutos, 0 para banimento permanente',
+                       motivo='Motivo do ban em 4 palavras no máximo')
+async def banir_jogador(interaction: discord.Interaction, localizador: str, duracao: int, motivo: str):
+    command_name = "banir-jogador"
 
-    if steam_info is None:
-        return await interaction.response.send_message("Não foi possível validar o ID da conta Steam do usuário")
+    if interaction.channel_id != ADMINS_CHANNEL_ID:
+        await log_action(interaction, StrFmtComandoExecutadoEmCanalIncorreto.format(command_name))
+        return await interaction.response.send_message(StrComandoDisponivelSomenteParaAdmins)
 
-    steam_id64 = steam_info["data"]["player"]["meta"]["steamid64"]
+    response = await BanPlayerByNetIdOrName().run(localizador, duracao, motivo)
+    await log_action(interaction, f"Comando banir-jogador executado com id: {localizador}, motivo: {motivo}, duração: {duracao}. Resposta: {response}")
 
-    Manager().vips.add(steam_id64, user.id, user.name)
+    await interaction.response.send_message(response)
 
-    guild = client.get_guild(MY_GUILD.id)
-    role = guild.get_role(VIP_ROLE)
+@client.tree.command(name='expulsar-jogador')
+@app_commands.describe(localizador='Nome ou Id da plataforma do jogador a ser kickado', motivo='Motivo do kick em 4 palavras no máximo')
+async def explusar_jogador(interaction: discord.Interaction, localizador: str, motivo: str):
+    command_name = "expulsar-jogador"
 
-    user.add_roles(role)
+    if interaction.channel_id != ADMINS_CHANNEL_ID:
+        await log_action(interaction, StrFmtComandoExecutadoEmCanalIncorreto.format(command_name))
+        return await interaction.response.send_message(StrComandoDisponivelSomenteParaAdmins)
 
-    await interaction.response.send_message(f'Pronto adicionei o {user.name} como VIP.')
+    response = await KickPlayerByNetIdOrName().run(localizador, motivo)
+    await log_action(interaction, f"Comando kickar-jogador executado com jogador: {localizador} e motivo: {motivo}. Resposta: {response}")
 
-client.run(Manager().config['discord']['token'])
+    await interaction.response.send_message(response)
+
+@client.tree.command(name='trocar-mapa')
+@app_commands.describe(mapa='Escolha o mapa para o qual deseja trocar', time='Escolha a equipe para a qual deseja trocar', iluminacao='Escolha o horário para a luz do mapa')
+@app_commands.choices(
+    mapa=[
+        app_commands.Choice(name=available_map, value=available_map)
+        for available_map in AVAILABLE_MAPS
+    ],
+    time=[
+        app_commands.Choice(name='Security', value='Security'),
+        app_commands.Choice(name='Insurgents', value='Insurgents')
+    ],
+    iluminacao=[
+        app_commands.Choice(name='Day', value='Day'),
+        app_commands.Choice(name='Night', value='Night')
+    ]
+)
+async def trocar_mapa(interaction: discord.Interaction, mapa: str, time: str, iluminacao: str):
+    command_name = "trocar-mapa"
+
+    if interaction.channel_id != ADMINS_CHANNEL_ID:
+        await log_action(interaction, StrFmtComandoExecutadoEmCanalIncorreto.format(command_name))
+        return await interaction.response.send_message(StrComandoDisponivelSomenteParaAdmins)
+
+    print(f"Comando trocar-mapa executado com mapa: {mapa}, equipe: {time}, luz: {iluminacao}")
+    response = await ChangeMap().run(mapa, time, iluminacao)
+
+    await interaction.response.send_message(response)
+
+async def update_config(interaction: discord.Interaction, nome_da_propriedade: str, novo_valor: str):
+    command_name = "alterar-config"
+
+    if interaction.channel_id != ADMINS_CHANNEL_ID:
+        await log_action(interaction, StrFmtComandoExecutadoEmCanalIncorreto.format(command_name))
+        return await interaction.response.send_message(StrComandoDisponivelSomenteParaAdmins)
+
+    await log_action(interaction, f"Comando alterar_config executado com propriedade: {nome_da_propriedade}, valor: {novo_valor}")
+    response = await UpdateConfig().run(nome_da_propriedade, novo_valor)
+
+    await interaction.response.send_message(response)
+
+@client.tree.command(name='alterar-config-bot')
+@app_commands.describe(nome_da_propriedade='Escolha a propriedade a ser alterada', novo_valor='Escolha o valor para a propriedade')
+@app_commands.choices(
+    nome_da_propriedade=[
+        app_commands.Choice(name=description, value=name)
+        for description, name in AVAILABLE_BOT_PROPERTIES.items()
+    ]
+)
+async def update_bot_config(interaction: discord.Interaction, nome_da_propriedade: str, novo_valor: str):
+    return await update_config(interaction, nome_da_propriedade, novo_valor)
+
+@client.tree.command(name='alterar-config-jogadores')
+@app_commands.describe(nome_da_propriedade='Escolha a propriedade a ser alterada', novo_valor='Escolha o valor para a propriedade')
+@app_commands.choices(
+    nome_da_propriedade=[
+        app_commands.Choice(name=description, value=name)
+        for description, name in AVAILABLE_PLAYER_PROPERTIES.items()
+    ]
+)
+async def update_players_config(interaction: discord.Interaction, nome_da_propriedade: str, novo_valor: str):
+    return await update_config(interaction, nome_da_propriedade, novo_valor)
+
+@client.tree.command(name='alterar-config-rodada')
+@app_commands.describe(nome_da_propriedade='Escolha a propriedade a ser alterada', novo_valor='Escolha o valor para a propriedade')
+@app_commands.choices(
+    nome_da_propriedade=[
+        app_commands.Choice(name=description, value=name)
+        for description, name in AVAILABLE_ROUND_PROPERTIES.items()
+    ]
+)
+async def update_round_config(interaction: discord.Interaction, nome_da_propriedade: str, novo_valor: str):
+    return await update_config(interaction, nome_da_propriedade, novo_valor)
+
+@client.tree.command(name='alterar-config-sobrevivencia')
+@app_commands.describe(nome_da_propriedade='Escolha a propriedade a ser alterada', novo_valor='Escolha o valor para a propriedade')
+@app_commands.choices(
+    nome_da_propriedade=[
+        app_commands.Choice(name=description, value=name)
+        for description, name in AVAILABLE_SURVIVAL_PROPERTIES.items()
+    ]
+)
+async def update_survival_config(interaction: discord.Interaction, nome_da_propriedade: str, novo_valor: str):
+    return await update_config(interaction, nome_da_propriedade, novo_valor)
+
+# Run the client
+client.run(config['discord']['token'])

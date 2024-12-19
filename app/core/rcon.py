@@ -1,55 +1,55 @@
-import socket
+import asyncio
 import struct
 import datetime
 
 class RCON:
     AUTH_FAILURE = -1
 
-    def __init__(self, config):
-        self.host = config["host"]
-        self.port = int(config["port"])
-        self.password = config["password"]
-        self.log = config["log"] == "true"
-        self.socket = None
+    def __init__(self, host, port, password, log=False):
+        self.host = host
+        self.port = int(port)
+        self.password = password
+        self.log = log
+        self.reader = None
+        self.writer = None
         self.request_id = 0
         self.status = 0
 
-    def execute(self, command):
-        self.open()
-        response = self.command(command)
-        self.close()
+    async def execute(self, command):
+        await self.open()
+        response = await self.command(command)
+        await self.close()
         return response
 
-    def __connect(self):
-        """Establishes a TCP connection to the RCON server."""
+    async def __connect(self):
+        """Establishes a TCP connection to the RCON server asynchronously."""
         if self.log:
             print(f"Connecting to {self.host}:{self.port}...")
 
-        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.socket.settimeout(5)  # Set timeout to 5 seconds
-
         try:
-            self.socket.connect((self.host, self.port))
+            self.reader, self.writer = await asyncio.open_connection(self.host, self.port)
             self.status = 1
             if self.log:
                 print("Connection established.")
         except ConnectionRefusedError:
             raise Exception("Server is not reachable. Connection refused.")
-        except socket.error as e:
-            raise Exception(f"Socket error: {e}")
+        except Exception as e:
+            raise Exception(f"Connection error: {e}")
 
-    def __login(self):
-        """Performs login/authentication with the RCON server using the provided password."""
+    async def __login(self):
+        """Performs login/authentication with the RCON server using the provided password asynchronously."""
         if self.status == 0:
             raise Exception("Connection is not established.")
 
         if self.log:
             print("Authenticating...")
 
-        if self.socket:
+        if self.writer:
             packet = self._create_packet(3, self.password)
-            self.socket.send(packet)
-            response = self._receive_response()
+            self.writer.write(packet)
+            await self.writer.drain()
+
+            response = await self._receive_response()
 
             if response["request_id"] == self.AUTH_FAILURE:
                 if self.log:
@@ -63,34 +63,37 @@ class RCON:
             return True
         return False
 
-    def open(self):
-        """Opens a connection to the RCON server."""
-        self.__connect()
+    async def open(self):
+        """Opens a connection to the RCON server asynchronously."""
+        await self.__connect()
 
-        if not self.__login():
+        if not await self.__login():
             raise Exception("Authentication failed.")
 
-    def command(self, cmd):
-        """Sends a command to the RCON server and processes the response."""
-
+    async def command(self, cmd):
+        """Sends a command to the RCON server and processes the response asynchronously."""
         if self.log:
             print(f"Sending command: {cmd}")
 
-        if self.socket:
+        if self.writer:
             packet = self._create_packet(2, cmd)
-            self.socket.send(packet)
-            response = self._receive_response()
+            self.writer.write(packet)
+            await self.writer.drain()
+
+            response = await self._receive_response()
 
             if self.log:
                 self._handle_response_with_log(cmd, response["body"])
 
             return response["body"]
 
-    def close(self):
-        """Closes the socket connection to the RCON server."""
-        if self.socket:
-            self.socket.close()
-            self.socket = None
+    async def close(self):
+        """Closes the socket connection to the RCON server asynchronously."""
+        if self.writer:
+            self.writer.close()
+            await self.writer.wait_closed()
+            self.writer = None
+            self.reader = None
             self.request_id = 0
 
             if self.log:
@@ -106,10 +109,10 @@ class RCON:
 
         return packet
 
-    def _receive_response(self):
-        """Receives and parses the response from the RCON server."""
+    async def _receive_response(self):
+        """Receives and parses the response from the RCON server asynchronously."""
         try:
-            response_data = self.socket.recv(4096)
+            response_data = await self.reader.read(4096)
 
             if len(response_data) < 12:
                 raise Exception("Incomplete response received from the server.")
@@ -118,7 +121,7 @@ class RCON:
             body = response_data[12:response_size + 4].decode("utf-8").strip()
 
             return {"size": response_size, "request_id": request_id, "type": response_type, "body": body}
-        except socket.timeout:
+        except asyncio.TimeoutError:
             raise Exception("Socket timeout occurred while waiting for the response.")
         except Exception as e:
             raise Exception(f"Error receiving response: {e}")
