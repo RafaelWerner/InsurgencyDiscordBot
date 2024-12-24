@@ -10,5 +10,7 @@ COPY . /app
 # Instale as dependências do projeto
 RUN pip install --no-cache-dir -r requirements.txt
 
+RUN python -c "from db.migration_manager import MigrationManager; MigrationManager('database.db', 'db/migrations/').migrate()"
+
 # Comando para rodar o aplicativo
 CMD ["python", "main.py"]
