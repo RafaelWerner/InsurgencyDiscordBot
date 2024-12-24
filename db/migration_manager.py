@@ -23,6 +23,8 @@ class MigrationManager:
         finally:
             cursor.close()
 
+        self.conn.commit()
+
     def _load_applied_migrations(self):
         cursor = self.conn.cursor()
         try:
