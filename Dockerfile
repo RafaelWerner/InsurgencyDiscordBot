@@ -1,16 +1,12 @@
 # Use a imagem base com Python 3.11
 FROM python:3.11-slim
 
-# Defina o diretório de trabalho no contêiner
 WORKDIR /app
 
-# Copie os arquivos do projeto para o diretório de trabalho
 COPY . /app
 
-# Instale as dependências do projeto
 RUN pip install --no-cache-dir -r requirements.txt
 
 RUN python -c "from db.migration_manager import MigrationManager; MigrationManager('database.db', 'db/migrations/').migrate()"
 
-# Comando para rodar o aplicativo
-CMD ["python", "main.py"]
+ENTRYPOINT ["./entrypoint.sh"]
