@@ -3,9 +3,8 @@ from db.migration_manager import Migration
 class CreateHistoricTable(Migration):
     id = 20241224130010
 
-    def execute(self, connection):
-        connection.execute(
-            """
+    def sql(self):
+        return """
             CREATE TABLE historic (
                 created_at   DATETIME      NOT NULL
                                         DEFAULT ( (STRFTIME('%Y-%m-%d %H:%M:%f', 'NOW') ) ),
@@ -15,4 +14,3 @@ class CreateHistoricTable(Migration):
                                         DEFAULT (0)
             );
             """
-        )

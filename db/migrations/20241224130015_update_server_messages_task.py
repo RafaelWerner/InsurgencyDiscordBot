@@ -1,11 +1,10 @@
 from db.migration_manager import Migration
 
-class InsertServerMessagesTask(Migration):
+class UpdateServerMessagesTask(Migration):
     id = 20241224130015
 
-    def execute(self, connection):
-        connection.execute(
-            """
+    def sql(self):
+        return """
                 UPDATE task
                 SET
                 interval = 300,
@@ -22,6 +21,4 @@ class InsertServerMessagesTask(Migration):
                     "Regla: Respeta a todos los jugadores. Comunícate con tu equipo. Espera a que el equipo capture o destruya el objetivo. Evita Flashbang y Smoke."
                 ]'
                 WHERE kind = 'server_messages';
-            );
             """
-        )

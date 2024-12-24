@@ -3,7 +3,9 @@ import os
 import importlib.util
 
 class Migration:
-    def up(self):
+    id = None
+
+    def sql(self):
         raise NotImplementedError()
 
 class MigrationManager:
@@ -12,14 +14,21 @@ class MigrationManager:
         self.migrations_folder = migrations_folder
         self.conn = sqlite3.connect(db_path)
         self._ensure_migrations_table_exists()
+        self._load_applied_migrations()
 
     def _ensure_migrations_table_exists(self):
-        with self.conn as conn:
-            conn.execute("CREATE TABLE IF NOT EXISTS migrations (id BIGINT PRIMARY KEY)")
+        cursor = self.conn.cursor()
+        try:
+            cursor.execute("CREATE TABLE IF NOT EXISTS migrations (id BIGINT PRIMARY KEY);")
+        finally:
+            cursor.close()
 
     def _load_applied_migrations(self):
-        with self.conn as conn:
-            rows = conn.execute("SELECT id FROM migrations order by id desc").fetchall()
+        cursor = self.conn.cursor()
+        try:
+            rows = cursor.execute("SELECT id FROM migrations order by id desc;").fetchall()
+        finally:
+            cursor.close()
 
         self.applied_migrations = {row[0] for row in rows}
 
@@ -36,6 +45,13 @@ class MigrationManager:
 
         raise ValueError(f"Migration class not found in {file_path}")
 
+    def _insert_applied_migration(self, timestamp):
+        cursor = self.conn.cursor()
+        try:
+            cursor.execute("INSERT INTO migrations (id) VALUES (?);", (timestamp,))
+        finally:
+            cursor.close()
+
     def _apply_migration(self, migration_file):
         timestamp = int(os.path.splitext(migration_file)[0].split('_')[0])
 
@@ -46,9 +62,13 @@ class MigrationManager:
         migration = self._load_migration(file_path)
         print(f"Applying migration {timestamp}")
 
-        with self.conn as conn:
-            migration.execute(conn)
-            conn.execute("INSERT INTO migrations (id) VALUES (?)", (timestamp,))
+        cursor = self.conn.cursor()
+        try:
+            cursor.execute(migration.sql())
+        finally:
+            cursor.close()
+
+        self._insert_applied_migration(timestamp)
 
     def migrate(self):
         migrations_files = sorted([f for f in os.listdir(self.migrations_folder) if f.endswith('.py')])

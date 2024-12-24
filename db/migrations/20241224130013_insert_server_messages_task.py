@@ -3,9 +3,8 @@ from db.migration_manager import Migration
 class InsertServerMessagesTask(Migration):
     id = 20241224130013
 
-    def execute(self, connection):
-        connection.execute(
-            """
+    def sql(self):
+        return """
             INSERT INTO task (id, kind, interval, data)
             VALUES (
                 1,
@@ -25,4 +24,3 @@ class InsertServerMessagesTask(Migration):
                 ]'
             );
             """
-        )

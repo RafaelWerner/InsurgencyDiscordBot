@@ -3,9 +3,8 @@ from db.migration_manager import Migration
 class CreateUserTable(Migration):
     id = 20241224130012
 
-    def execute(self, connection):
-        connection.execute(
-            """
+    def sql(self):
+        return """
             CREATE TABLE user (
                 discord_id   BIGINT        PRIMARY KEY
                                         NOT NULL
@@ -19,4 +18,3 @@ class CreateUserTable(Migration):
                 created_by   BIGINT        NOT NULL
             );
             """
-        )
