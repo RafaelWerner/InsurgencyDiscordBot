@@ -1,8 +1,6 @@
 from app.service.base import BaseService
 
 class Say(BaseService):
-    MAX_LINE_LENGTH = 80
-
     def __parse_message(self, message):
         parsed_message = [message]
 
@@ -11,10 +9,6 @@ class Say(BaseService):
 
         if "\n" in message:
             parsed_message = message.split("\n")
-
-        for line in parsed_message:
-            if len(line) > self.MAX_LINE_LENGTH:
-                raise ValueError(f"A mensagem é muito comprida: [{line}]")
 
         return parsed_message
 
