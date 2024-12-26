@@ -1,6 +1,7 @@
 import sqlite3
 import os
 import importlib.util
+import logging
 
 class Migration:
     id = None
@@ -10,6 +11,7 @@ class Migration:
 
 class MigrationManager:
     def __init__(self, db_path, migrations_folder):
+        self.logger = logging.getLogger(__name__)
         self.db_path = db_path
         self.migrations_folder = migrations_folder
         self.conn = sqlite3.connect(db_path)
@@ -62,7 +64,7 @@ class MigrationManager:
 
         file_path = os.path.join(self.migrations_folder, migration_file)
         migration = self._load_migration(file_path)
-        print(f"Applying migration {timestamp}")
+        self.logger.info(f"Applying migration {timestamp}")
 
         cursor = self.conn.cursor()
         try:
@@ -73,10 +75,14 @@ class MigrationManager:
         self._insert_applied_migration(timestamp)
 
     def migrate(self):
-        migrations_files = sorted([f for f in os.listdir(self.migrations_folder) if f.endswith('.py')])
+        try:
+            migrations_files = sorted([f for f in os.listdir(self.migrations_folder) if f.endswith('.py')])
 
-        for migration_file in migrations_files:
-            self._apply_migration(migration_file)
+            for migration_file in migrations_files:
+                self._apply_migration(migration_file)
 
-        self.conn.commit()
-        print("All migrations applied")
+            self.conn.commit()
+            self.logger.info("All migrations applied")
+        except Exception as e:
+            self.logger.error(f"Error applying migrations: {e}")
+            self.conn.rollback()

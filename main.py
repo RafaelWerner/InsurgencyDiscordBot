@@ -1,6 +1,8 @@
 
+import logging
 import discord
 from discord import app_commands
+from datetime import datetime
 
 from app.singleton.config import SingletonConfig
 from app.core.client import CustomClient
@@ -16,6 +18,11 @@ from app.command.send_message import SendMessage
 
 from app.resources.resources import *
 from app.resources.locales import *
+
+# Logs, Save log with name as the date time formated
+logger = logging.getLogger(__name__)
+log_name = datetime.now().strftime("%Y-%m-%d %H-%M-%S")
+logging.basicConfig(filename=f'{log_name}.log', encoding='utf-8', level=logging.DEBUG)
 
 # Singleton instance
 config = SingletonConfig().get()
@@ -34,15 +41,15 @@ async def log_action(interaction, message):
 
         if logs_channel:
             log_content = f"**Usuário:** {interaction.user.name}\n> {message}"
+            logger.info(log_content)
             await logs_channel.send(log_content)
         else:
-            print(f"Canal de logs não encontrado")
+            logger.error(f"Canal de logs não encontrado")
     except Exception as e:
         raise Exception(f"Erro ao logar ação: {e}")
 @client.event
 async def on_ready():
-    print(f'Entrou como {client.user} (ID: {client.user.id})')
-    print('------')
+    logger.info(f'Entrou como {client.user} (ID: {client.user.id})')
 
 @client.tree.command(name='listar-jogadores')
 async def listar_jogadores(interaction: discord.Interaction):
@@ -154,7 +161,7 @@ async def trocar_mapa(interaction: discord.Interaction, mapa: str, time: str, il
         await log_action(interaction, StrFmtComandoExecutadoEmCanalIncorreto.format(command_name))
         return await interaction.response.send_message(StrComandoDisponivelSomenteParaAdmins)
 
-    print(f"Comando trocar-mapa executado com mapa: {mapa}, equipe: {time}, luz: {iluminacao}")
+    await log_action(interaction, f"Comando trocar-mapa executado com mapa: {mapa}, equipe: {time}, luz: {iluminacao}")
     response = await ChangeMap().run(mapa, time, iluminacao)
 
     await interaction.response.send_message(response)
