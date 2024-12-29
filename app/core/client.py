@@ -1,7 +1,7 @@
 import discord
 from discord.ext import tasks
 
-from app.core.runner import Runner
+from app.singleton.runner import SingletonRunner
 
 class CustomClient(discord.Client):
     def __init__(self, guild_id):
@@ -18,11 +18,11 @@ class CustomClient(discord.Client):
         self.background_tasks.start()
         await self.tree.sync(guild=self.guild_id)
 
-    @tasks.loop(seconds=60)
+    @tasks.loop(seconds=2)
     async def background_tasks(self):
         await self.runner.execute()
 
     @background_tasks.before_loop
     async def before_run_tasks(self):
-        self.runner = Runner()
+        self.runner = SingletonRunner()
         await self.wait_until_ready()
