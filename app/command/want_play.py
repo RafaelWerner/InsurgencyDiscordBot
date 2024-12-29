@@ -16,7 +16,7 @@ class WantPlay:
             tries += 1
             chosen = random.choice(players)
 
-            if not await SingletonAdmins().is_admin(chosen.id):
+            if not await SingletonAdmins().is_admin(chosen.net_id):
                 return chosen
 
         raise ValueError("Não foi possível encontrar um jogador para ser removido")
