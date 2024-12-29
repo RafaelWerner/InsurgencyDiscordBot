@@ -67,15 +67,10 @@ async def on_ready():
 @client.tree.command(name='listar-jogadores')
 async def listar_jogadores(interaction: discord.Interaction):
     command_name = "listar-jogadores"
-    min_roles = ["Admin", "Moderador", "Amiguxos"]
 
     if interaction.channel_id != BOT_COMMAND_CHANNEL_ID:
         await log_action(interaction, StrFmtComandoExecutadoEmCanalIncorreto.format(command_name))
         return await interaction.response.send_message(StrComandoDeveSerExecutadoNoCanal.format(BOT_COMMAND_CHANNEL_NAME))
-
-    if not await has_permission(min_roles, interaction):
-        await log_action(interaction, StrFmtComandoExecutadoSemPermissao.format(command_name))
-        return await interaction.response.send_message(StrComandoDisponivelSomentePara.format(" e ".join(min_roles)))
 
     await log_action(interaction, StrFmtComandoExecutado.format(command_name))
     playerslist = await ListOnlinePlayers().run()
@@ -123,26 +118,21 @@ async def quero_jogar(interaction: discord.Interaction):
     await log_action(interaction, "Comando quero-jogar executado.")
     await SingletonRunner().schedule(WantPlayJob(interaction))
 
-    await interaction.response.send_message("Espera só um poquinho que vou arrumar um espaço para você jogar.")
+    await interaction.response.send_message("Espera só um poquinho que vou arrumar um espaço para você jogar.", ephemeral=True)
 
 
 @client.tree.command(name='listar-admins')
 async def listar_admins(interaction: discord.Interaction):
     command_name = "listar-admins"
-    min_roles = ["Admin", "Moderador", "Amiguxos"]
 
     if interaction.channel_id != BOT_COMMAND_CHANNEL_ID:
         await log_action(interaction, StrFmtComandoExecutadoEmCanalIncorreto.format(command_name))
         return await interaction.response.send_message(StrComandoDeveSerExecutadoNoCanal.format(BOT_COMMAND_CHANNEL_NAME))
 
-    if not await has_permission(min_roles, interaction):
-        await log_action(interaction, StrFmtComandoExecutadoSemPermissao.format(command_name))
-        return await interaction.response.send_message(StrComandoDisponivelSomentePara.format(" e ".join(min_roles)))
-
     await log_action(interaction, "Comando listar-admins executado.")
     message = ListAdmins().run()
 
-    await interaction.response.send_message(message)
+    await interaction.response.send_message(message, ephemeral=True)
 
 
 @client.tree.command(name='banir-jogador')
@@ -285,6 +275,31 @@ async def update_round_config(interaction: discord.Interaction, nome_da_propried
 )
 async def update_survival_config(interaction: discord.Interaction, nome_da_propriedade: str, novo_valor: str):
     return await update_config(interaction, nome_da_propriedade, novo_valor)
+
+
+@client.tree.command(name='me-ajuda')
+async def help_me(interaction: discord.Interaction):
+    message = """
+    **Comandos disponíveis:**
+    [ Para todos]
+    - /listar-jogadores: Lista os jogadores online.
+    - /listar-admins: Lista os administradores online.
+
+    [ Somente para Moderadores e Admins ]
+    - /expulsar-jogador: Expulsa um jogador do servidor.
+    - /enviar-mensagem: Envia uma mensagem para todos os jogadores.
+    - /quero-jogar: Entra na fila para jogar.
+
+    [ Somente para Admins ]
+    - /banir-jogador: Bane um jogador do servidor.
+    - /trocar-mapa: Troca o mapa do servidor.
+    - /alterar-config-bot: Altera uma configuração do bot.
+    - /alterar-config-jogadores: Altera uma configuração dos jogadores.
+    - /alterar-config-rodada: Altera uma configuração da rodada.
+    - /alterar-config-sobrevivencia: Altera uma configuração de sobrevivência.
+    """
+
+    await interaction.response.send_message(message, ephemeral=True)
 
 # Run the client
 client.run(config['discord']['token'])
