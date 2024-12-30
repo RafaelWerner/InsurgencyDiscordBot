@@ -7,7 +7,7 @@ class ListOnlinePlayers:
 
     async def __format_player(self, player):
         if await SingletonAdmins().is_admin(player.net_id):
-            return f"[1;2m[1;35m- {player.name} ({player.score})[0m[0m"
+            return f"[1;2m[1;35m- {player.name} ({player.score}) [ {player.net_id} ]  [0m[0m"
 
         return f"- {player.name} ({player.score})"
 
