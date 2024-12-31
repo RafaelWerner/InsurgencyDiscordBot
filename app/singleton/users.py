@@ -22,16 +22,16 @@ class SingletonUsers:
         self._users = User().all()
 
         for user in self._users:
-            self._hash_table[user.net_id] = user
+            self._hash_table[user.plataform_id] = user
             self._hash_table[user.discord_id] = user
 
             if user.role == "admin":
                 self._admin_users.append(user)
-                self._admins_ids.append(user.net_id)
+                self._admins_ids.append(user.plataform_id)
                 self._admins_ids.append(user.discord_id)
             elif user.role == "moderator":
                 self._moderator_users.append(user)
-                self._moderators_ids.append(user.net_id)
+                self._moderators_ids.append(user.plataform_id)
                 self._moderators_ids.append(user.discord_id)
 
     def get(self):
