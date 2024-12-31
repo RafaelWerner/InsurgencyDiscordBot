@@ -40,6 +40,12 @@ class SingletonUsers:
     async def find(self, id):
         return self._hash_table.get(id)
 
+    def get_admins(self):
+        return self._admin_users
+
+    def get_moderators(self):
+        return self._moderator_users
+
     async def is_admin(self, id):
         return id in self._admins_ids
 

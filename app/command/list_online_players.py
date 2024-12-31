@@ -6,15 +6,14 @@ class ListOnlinePlayers:
         return "\n".join([await self.__format_player(player) for player in players])
 
     async def __format_player(self, player):
-        player_info = f"- {player.name} ({player.score}) [ {player.net_id} ]"
 
         if await SingletonUsers().is_admin(player.net_id):
-            return f"[2;35m{player_info}[0m"
+            return f"- [2;35m{player.name}[0m ({player.score})"
 
         if await SingletonUsers().is_moderator(player.net_id):
-            return f"[2;31m{player_info}[0m"
+            return f"- [2;31m{player.name}[0m ({player.score})"
 
-        return player_info
+        return f"- {player.name} ({player.score}) [ {player.net_id} ]"
 
     async def run(self):
         online_players = await ListPlayers().run()

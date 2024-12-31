@@ -130,7 +130,7 @@ async def listar_admins(interaction: discord.Interaction):
         return await interaction.response.send_message(StrComandoDeveSerExecutadoNoCanal.format(BOT_COMMAND_CHANNEL_NAME))
 
     await log_action(interaction, "Comando listar-admins executado.")
-    message = ListAdmins().run()
+    message = await ListAdmins().run()
 
     await interaction.response.send_message(message, ephemeral=True)
 
