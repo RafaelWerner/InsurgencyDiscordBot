@@ -47,7 +47,7 @@ class ListPlayers(BaseService):
 
     def __net_id(self, values, offset):
         try:
-            return values[offset + self.__index_net_id].split(":")[1].strip()
+            return values[offset + self.__index_net_id].strip()
         except:
             return "0"
 

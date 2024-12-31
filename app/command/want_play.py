@@ -4,7 +4,7 @@ import asyncio
 from app.service.listplayers import ListPlayers
 from app.service.say import Say
 from app.service.kick import Kick
-from app.singleton.admins import SingletonAdmins
+from app.singleton.users import SingletonUsers
 
 class WantPlay:
     SLOTS_AMOUNT = 12
@@ -16,10 +16,10 @@ class WantPlay:
             tries += 1
             chosen = random.choice(players)
 
-            if not await SingletonAdmins().is_admin(chosen.net_id):
+            if await SingletonUsers().is_normal_user(chosen.net_id):
                 return chosen
 
-        raise ValueError("Não foi possível encontrar um jogador para ser removido")
+        raise ValueError("Que pena só tem admins e moderadores jogando agora.")
 
     async def __kick_player(self, player):
         message = f"""
@@ -38,7 +38,7 @@ class WantPlay:
         try:
             player = await self.__randomize(players)
             await self.__kick_player(player)
-            return "Liberei uma vaga para você, divirta-se!"
+            return "Liberei uma vaga para você, corre lá!"
         except ValueError as err:
             return str(err)
 

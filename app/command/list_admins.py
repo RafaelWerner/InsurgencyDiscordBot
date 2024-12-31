@@ -1,13 +1,35 @@
-from app.singleton.admins import SingletonAdmins
+from app.singleton.users import SingletonUsers
 
 class ListAdmins():
-    async def run(self):
-        admins_list = SingletonAdmins().all()
-        message = f"```ansi\nEstamos com {len(admins_list)} VIPs:\n\n"
+    async def __build_admins(self):
+        admins_list = SingletonUsers().get_admins()
+        result = []
 
         for admin in admins_list:
-            message += f"[1;2m[1;35m- {admin.name}[0m[0m\n"
+            result.append(f"[2;35m- {admin.name}[0m")
 
-        message = message + "```"
+        return result
 
-        return message
+    async def __build_moderators(self):
+        moderators_list = SingletonUsers().get_moderators()
+        result = []
+
+        for moderator in moderators_list:
+            result.append(f"[2;31m- {moderator.name}[0m")
+
+        return result
+
+    async def run(self):
+        admins_list = self.__build_admins()
+        moderators_list = self.__build_moderators()
+
+        message = [
+            "```ansi",
+            f"Estamos com {len(admins_list)} Admins:\n",
+            "\n".join(admins_list),
+            f"Estamos com {len(moderators_list)} Moderadores:\n",
+            "\n".join(moderators_list),
+            "```"
+        ]
+
+        return "\n".join(message)
