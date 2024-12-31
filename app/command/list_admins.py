@@ -20,8 +20,8 @@ class ListAdmins():
         return result
 
     async def run(self):
-        admins_list = self.__build_admins()
-        moderators_list = self.__build_moderators()
+        admins_list = await self.__build_admins()
+        moderators_list = await self.__build_moderators()
 
         message = [
             "```ansi",
