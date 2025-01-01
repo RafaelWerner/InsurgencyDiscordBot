@@ -27,7 +27,6 @@ class ListAdmins():
             "```ansi",
             f"Estamos com {len(admins_list)} [2;35mAdmins[0m e [2;31mModeradores[0m:\n[2;35m",
             "\n".join(admins_list),
-            f"[0m\nEstamos com {len(moderators_list)} Moderadores:\n[2;31m",
             "\n".join(moderators_list),
             "[0m```"
         ]
