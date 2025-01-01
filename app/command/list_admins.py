@@ -6,7 +6,7 @@ class ListAdmins():
         result = []
 
         for admin in admins_list:
-            result.append(f"- [2;35m{admin.name}[0m")
+            result.append(f"- {admin.name}")
 
         return result
 
@@ -15,7 +15,7 @@ class ListAdmins():
         result = []
 
         for moderator in moderators_list:
-            result.append(f"- [2;31m{moderator.name}[0m")
+            result.append(f"- {moderator.name}")
 
         return result
 
@@ -25,11 +25,11 @@ class ListAdmins():
 
         message = [
             "```ansi",
-            f"Estamos com {len(admins_list)} Admins:\n",
+            f"Estamos com {len(admins_list)} [2;35mAdmins[0m e [2;31mModeradores[0m:\n[2;35m",
             "\n".join(admins_list),
-            f"\nEstamos com {len(moderators_list)} Moderadores:\n",
+            f"[0m\nEstamos com {len(moderators_list)} Moderadores:\n[2;31m",
             "\n".join(moderators_list),
-            "```"
+            "[0m```"
         ]
 
         return "\n".join(message)
