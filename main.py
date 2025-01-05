@@ -281,21 +281,29 @@ async def update_survival_config(interaction: discord.Interaction, nome_da_propr
 async def help_me(interaction: discord.Interaction):
     message = """
     **Comandos disponíveis:**
-    [ Para todos]
+    [ Para todos ]
     - /listar-jogadores: Lista os jogadores online.
+
     - /listar-admins: Lista os administradores online.
 
     [ Somente para Moderadores e Admins ]
     - /expulsar-jogador: Expulsa um jogador do servidor.
+
     - /enviar-mensagem: Envia uma mensagem para todos os jogadores.
+
     - /quero-jogar: Entra na fila para jogar.
 
     [ Somente para Admins ]
     - /banir-jogador: Bane um jogador do servidor.
+
     - /trocar-mapa: Troca o mapa do servidor.
+
     - /alterar-config-bot: Altera uma configuração do bot.
+
     - /alterar-config-jogadores: Altera uma configuração dos jogadores.
+
     - /alterar-config-rodada: Altera uma configuração da rodada.
+
     - /alterar-config-sobrevivencia: Altera uma configuração de sobrevivência.
     """
 

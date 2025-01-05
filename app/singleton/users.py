@@ -2,12 +2,6 @@ from app.model.user import User
 
 class SingletonUsers:
     _instance = None
-    _users = []
-    _admin_users = []
-    _moderator_users = []
-    _admins_ids = []
-    _moderators_ids = []
-    _hash_table = {}
 
     def __new__(cls, *args, **kwargs):
         if not cls._instance:
@@ -16,6 +10,13 @@ class SingletonUsers:
         return cls._instance
 
     def __init__(self):
+        self._users = []
+        self._admin_users = []
+        self._moderator_users = []
+        self._admins_ids = []
+        self._moderators_ids = []
+        self._hash_table = {}
+
         self.load()
 
     def load(self):
