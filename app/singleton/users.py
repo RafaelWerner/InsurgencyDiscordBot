@@ -12,9 +12,7 @@ class SingletonUsers:
     def __init__(self):
         self._users = []
         self._admin_users = []
-        self._moderator_users = []
         self._admins_ids = []
-        self._moderators_ids = []
         self._hash_table = {}
 
         self.load()
@@ -30,10 +28,6 @@ class SingletonUsers:
                 self._admin_users.append(user)
                 self._admins_ids.append(user.plataform_id)
                 self._admins_ids.append(user.discord_id)
-            elif user.role == "moderator":
-                self._moderator_users.append(user)
-                self._moderators_ids.append(user.plataform_id)
-                self._moderators_ids.append(user.discord_id)
 
     def get(self):
         return self._users
@@ -44,14 +38,8 @@ class SingletonUsers:
     def get_admins(self):
         return self._admin_users
 
-    def get_moderators(self):
-        return self._moderator_users
-
     async def is_admin(self, id):
         return id in self._admins_ids
 
-    async def is_moderator(self, id):
-        return id in self._moderators_ids
-
     async def is_normal_user(self, id):
-        return id not in self._admins_ids and id not in self._moderators_ids
+        return id not in self._admins_ids

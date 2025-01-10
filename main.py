@@ -104,7 +104,7 @@ async def enviar_mensagem(interaction: discord.Interaction, mensagem: str):
 
 @client.tree.command(name='quero-jogar')
 async def quero_jogar(interaction: discord.Interaction):
-    min_roles = ["Admin", "Moderador"]
+    min_roles = ["Admin"]
     command_name = "quero-jogar"
 
     if interaction.channel_id != BOT_COMMAND_CHANNEL_ID:
@@ -161,7 +161,7 @@ async def banir_jogador(interaction: discord.Interaction, localizador: str, dura
 @app_commands.describe(localizador='Nome ou Id da plataforma do jogador a ser kickado', motivo='Motivo do kick em 4 palavras no máximo')
 async def explusar_jogador(interaction: discord.Interaction, localizador: str, motivo: str):
     command_name = "expulsar-jogador"
-    min_roles = ["Admin", "Moderador"]
+    min_roles = ["Admin"]
 
     if interaction.channel_id != BOT_COMMAND_CHANNEL_ID:
         await log_action(interaction, StrFmtComandoExecutadoEmCanalIncorreto.format(command_name))
@@ -286,14 +286,13 @@ async def help_me(interaction: discord.Interaction):
 
     - /listar-admins: Lista os administradores online.
 
-    [ Somente para Moderadores e Admins ]
+    [ Somente para Admins ]
     - /expulsar-jogador: Expulsa um jogador do servidor.
 
     - /enviar-mensagem: Envia uma mensagem para todos os jogadores.
 
     - /quero-jogar: Entra na fila para jogar.
 
-    [ Somente para Admins ]
     - /banir-jogador: Bane um jogador do servidor.
 
     - /trocar-mapa: Troca o mapa do servidor.

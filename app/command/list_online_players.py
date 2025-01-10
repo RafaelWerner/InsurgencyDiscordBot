@@ -10,9 +10,6 @@ class ListOnlinePlayers:
         if await SingletonUsers().is_admin(player.net_id):
             return f"- [2;35m{player.name}[0m ({player.score})"
 
-        if await SingletonUsers().is_moderator(player.net_id):
-            return f"- [2;31m{player.name}[0m ({player.score})"
-
         return f"- {player.name} ({player.score}) [ {player.net_id} ]"
 
     async def run(self):
