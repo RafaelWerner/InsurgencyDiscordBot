@@ -29,6 +29,7 @@ logging.basicConfig(filename=f'{log_name}.log', encoding='utf-8', level=logging.
 
 # Singleton instance
 config = SingletonConfig().get()
+SERVER_IP = config['rcon']['host']
 
 # Channels
 ADMINS_CHANNEL_ID = int(config['discord']['admins_channel_id'])
@@ -277,6 +278,25 @@ async def update_survival_config(interaction: discord.Interaction, nome_da_propr
     return await update_config(interaction, nome_da_propriedade, novo_valor)
 
 
+@client.tree.command(name='ip')
+async def exibir_ip(interaction: discord.Interaction):
+    command_name = "ip"
+    min_roles = ["Admin"]
+
+    if interaction.channel_id != BOT_COMMAND_CHANNEL_ID:
+        await log_action(interaction, StrFmtComandoExecutadoEmCanalIncorreto.format(command_name))
+        return await interaction.response.send_message(StrComandoDeveSerExecutadoNoCanal.format(BOT_COMMAND_CHANNEL_NAME))
+
+    if not await has_permission(min_roles, interaction):
+        await log_action(interaction, StrFmtComandoExecutadoSemPermissao.format(command_name))
+        return await interaction.response.send_message(StrComandoDisponivelSomentePara.format(" e ".join(min_roles)))
+
+    await log_action(interaction, "Comando ip executado.")
+    message = f"{SERVER_IP}:27102"
+
+    await interaction.response.send_message(message, ephemeral=True)
+
+
 @client.tree.command(name='me-ajuda')
 async def help_me(interaction: discord.Interaction):
     message = """
@@ -287,6 +307,8 @@ async def help_me(interaction: discord.Interaction):
     - /listar-admins: Lista os administradores online.
 
     [ Somente para Admins ]
+    - /ip: Exibe o ip atual do server
+
     - /expulsar-jogador: Expulsa um jogador do servidor.
 
     - /enviar-mensagem: Envia uma mensagem para todos os jogadores.
