@@ -84,5 +84,5 @@ class MigrationManager:
             self.conn.commit()
             self.logger.info("All migrations applied")
         except Exception as e:
-            self.logger.error(f"Error applying migrations: {e}")
+            self.logger.error(f"Error applying migration {migration_file}: {e}")
             self.conn.rollback()
