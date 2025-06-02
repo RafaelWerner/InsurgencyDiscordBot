@@ -236,16 +236,16 @@ async def update_survival_config(interaction: discord.Interaction, nome_da_propr
     return await update_config(interaction, nome_da_propriedade, novo_valor)
 
 
-@client.tree.command(name='ip')
+@client.tree.command(name='ip_do_server')
 async def exibir_ip(interaction: discord.Interaction):
-    command_name = "ip"
+    command_name = "ip_do_server"
     min_roles = ["Admin", "Moderador", "Chegados"]
     permited_channels = [BOT_COMMAND_CHANNEL_ID]
 
     if not await client.is_valid_execution(command_name, min_roles, permited_channels, interaction):
         return
 
-    await client.log_action(interaction, "Comando ip executado.")
+    await client.log_action(interaction, "Comando ip do server executado.")
     message = f"{SERVER_IP}:27102"
 
     await interaction.response.send_message(message, ephemeral=True)
@@ -256,7 +256,7 @@ async def help_me(interaction: discord.Interaction):
     message = """
     **Comandos disponíveis:**
     [ Para usuários com permissões adicionais ]
-    - /ip: Exibe o ip atual do server
+    - /ip_do_server: Exibe o ip atual do server
 
     - /listar-jogadores: Lista os jogadores online.
 
