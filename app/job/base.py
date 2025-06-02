@@ -2,8 +2,13 @@
 class BaseJob:
 
     def __init__(self, interaction):
-        self.response_channel = interaction.channel
-        self.user = interaction.user
+        self.interaction = interaction
+
+    def response_channel(self):
+        return self.interaction.channel
+
+    def user(self):
+        return self.interaction.user
 
     async def process(self):
         raise NotImplementedError("process method must be implemented")
@@ -11,4 +16,4 @@ class BaseJob:
     async def execute(self):
         response = await self.process()
 
-        await self.response_channel.send(content = response)
+        await self.response_channel().send(content = response)

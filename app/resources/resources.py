@@ -1,6 +1,5 @@
 
 AVAILABLE_MAPS = [
-    "TORO",
     "Trainyard",
     "Prison",
     "Tideway",
@@ -18,7 +17,8 @@ AVAILABLE_MAPS = [
     "Farmhouse",
     "Crossing",
     "Citadel",
-    "Bab"
+    "Bab",
+    "Forest"
 ]
 
 AVAILABLE_BOT_PROPERTIES = {
