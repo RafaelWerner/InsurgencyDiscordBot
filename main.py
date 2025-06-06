@@ -55,7 +55,7 @@ async def listar_jogadores(interaction: discord.Interaction):
         return
 
     await client.log_action(interaction, StrFmtComandoExecutado.format(command_name))
-    await SingletonRunner().schedule(ListPlayersJob(interaction))
+    await SingletonRunner().schedule(ListPlayersJob(interaction), retries=3)
 
     await interaction.response.send_message("Aguarde um momento, estou listando os jogadores online.", ephemeral=True)
 
@@ -91,7 +91,7 @@ async def quero_jogar(interaction: discord.Interaction):
         return
 
     await client.log_action(interaction, "Comando quero-jogar executado.")
-    await SingletonRunner().schedule(WantPlayJob(interaction))
+    await SingletonRunner().schedule(WantPlayJob(interaction), retries=3)
 
     await interaction.response.send_message("Espera só um poquinho que vou arrumar um espaço para você jogar.", ephemeral=True)
 

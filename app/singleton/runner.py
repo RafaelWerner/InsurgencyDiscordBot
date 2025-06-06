@@ -38,6 +38,10 @@ class SingletonRunner:
             except Exception as e:
                 self.logger.error(f"Erro executando o job {job}: {e}")
 
+                if job.retryable():
+                    self.logger.info(f"Reprogramando o job {job} para nova execução")
+                    await self.schedule(job)
+
         for task in self._tasks:
             try:
                 await task.execute()
