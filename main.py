@@ -41,6 +41,8 @@ LOGS_CHANNEL_ID = int(config['discord']['logs_channel_id'])
 # Custom client
 client = CustomClient(logger, discord.Object(id = config['discord']['guild_id']), LOGS_CHANNEL_ID)
 
+UltimaExecucaoListarPlayers = datetime.now() - timedelta(minutes=5)
+
 @client.event
 async def on_ready():
     logger.info(f'Entrou como {client.user} (ID: {client.user.id})')
@@ -49,10 +51,16 @@ async def on_ready():
 @client.tree.command(name='listar-jogadores')
 async def listar_jogadores(interaction: discord.Interaction):
     command_name = "listar-jogadores"
-    permited_channels = [BOT_COMMAND_CHANNEL_ID, BOT_COMMAND_PUBLIC_CHANNEL_ID]
+    permited_channels = [BOT_COMMAND_CHANNEL_ID, ]
 
     if not await client.is_valid_execution(command_name, None, permited_channels, interaction):
         return
+
+    if interaction.channel_id == BOT_COMMAND_PUBLIC_CHANNEL_ID and datetime.now() - UltimaExecucaoListarPlayers < timedelta(minutes=10):
+        await interaction.response.send_message("O comando já foi executado há menos de 10 minutos, aguarde um pouco mais.", ephemeral=True)
+        return
+
+    UltimaExecucaoListarPlayers = datetime.now()
 
     await client.log_action(interaction, StrFmtComandoExecutado.format(command_name))
     await SingletonRunner().schedule(ListPlayersJob(interaction, retries=3))
